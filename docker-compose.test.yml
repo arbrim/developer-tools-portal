@@ -1,0 +1,48 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-test-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      MONGO_URI: mongodb://mongo:27017/developer_tools_portal_test
+      JWT_SECRET: ${JWT_SECRET:-change-me-test-secret}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:18081}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+      USER_EMAIL: ${USER_EMAIL:-user@example.com}
+      USER_PASSWORD: ${USER_PASSWORD:-User123!}
+    ports:
+      - "${BACKEND_PORT:-19031}:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:19031/api}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-18081}:4173"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-test-data:
