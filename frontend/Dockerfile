@@ -18,6 +18,7 @@ WORKDIR /app/frontend
 ENV NODE_ENV=production
 COPY --from=deps /app/frontend/node_modules ./node_modules
 COPY --from=build /app/frontend/dist ./dist
+COPY --from=build /app/frontend/vite.config.ts ./vite.config.ts
 COPY frontend/package.json ./package.json
 EXPOSE 4173
 CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]

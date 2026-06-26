@@ -18,8 +18,8 @@ const ENV_DEFAULTS = {
     frontendPort: '18081',
     backendPort: '19031',
     mongoUri: 'mongodb://mongo:27017/developer_tools_portal_test',
-    corsOrigin: 'http://localhost:18081',
-    viteApiUrl: 'http://localhost:19031/api',
+    corsOrigin: 'https://test.developer-tools-portal.com,http://localhost:18081',
+    viteApiUrl: '/api',
     seedOnStart: 'true',
   },
   prod: {
@@ -27,8 +27,8 @@ const ENV_DEFAULTS = {
     frontendPort: '28080',
     backendPort: '29030',
     mongoUri: 'mongodb://mongo:27017/developer_tools_portal',
-    corsOrigin: 'http://localhost:28080',
-    viteApiUrl: 'http://localhost:29030/api',
+    corsOrigin: 'https://developer-tools-portal.com,https://www.developer-tools-portal.com,http://localhost:28080',
+    viteApiUrl: '/api',
     seedOnStart: 'true',
   },
 };

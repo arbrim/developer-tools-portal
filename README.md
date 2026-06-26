@@ -12,6 +12,11 @@ Containerized Node.js application for an internal Developer Tools landing page. 
 
 The frontend container currently serves the built Vite app with `vite preview` to keep the stack simple for CI and assignment review. A production reverse proxy or static web server can be added later if needed.
 
+## Live Environments
+
+- Production: `https://developer-tools-portal.com`
+- Test: `https://test.developer-tools-portal.com`
+
 ## Repository Layout
 
 ```text
@@ -138,7 +143,7 @@ Test stack runs all services on separate host ports:
 
 ```bash
 npm run env -- test
-docker compose -f docker-compose.test.yml up --build
+docker compose -f docker-compose.test.yml up --build -d
 ```
 
 Test URLs:
@@ -205,6 +210,22 @@ The production workflow deploys `main` with `docker-compose.prod.yml`, creates `
 
 Both workflows can use the same VM checkout path, for example `APP_PATH=/home/deploy/apps/developer-tools-portal`. Test and production are separated by `.env.test`/`.env.prod`, different Docker Compose project names, different volumes, and different host ports.
 
+For manual VM deployment, run `scripts/use-env.mjs` first and point Docker Compose at the generated root `.env` file:
+
+```bash
+cd /home/deploy/apps/developer-tools-portal
+node scripts/use-env.mjs test
+docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env up -d --build --remove-orphans
+```
+
+For production, create `.env.prod` with real secrets first, then run:
+
+```bash
+cd /home/deploy/apps/developer-tools-portal
+node scripts/use-env.mjs prod
+docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env up -d --build --remove-orphans
+```
+
 Required GitHub repository secrets shared by both deploy workflows:
 
 - `HETZNER_HOST`
@@ -232,7 +253,7 @@ Default test environment variables:
 - `BACKEND_BIND` defaults to `127.0.0.1`
 - `BACKEND_PORT` defaults to `19031`
 - `CORS_ORIGIN` defaults to `https://test.developer-tools-portal.com`
-- `VITE_API_URL` defaults to `https://test.developer-tools-portal.com/api`
+- `VITE_API_URL` defaults to `/api`, which Nginx routes to the test backend
 - `VITE_APP_ENV` defaults to `test`
 - `JWT_EXPIRES_IN` defaults to `1h`
 - `SEED_ON_START` defaults to `true`
@@ -246,7 +267,7 @@ Default production environment variables:
 - `BACKEND_BIND` defaults to `127.0.0.1`
 - `BACKEND_PORT` defaults to `29030`
 - `CORS_ORIGIN` defaults to `https://developer-tools-portal.com,https://www.developer-tools-portal.com`
-- `VITE_API_URL` defaults to `https://developer-tools-portal.com/api`
+- `VITE_API_URL` defaults to `/api`, which Nginx routes to the production backend
 - `VITE_APP_ENV` defaults to empty, so no environment badge is shown in production
 - `JWT_EXPIRES_IN` defaults to `1h`
 - `SEED_ON_START` defaults to `true`

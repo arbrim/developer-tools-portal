@@ -20,7 +20,7 @@ services:
       MONGO_URI: mongodb://mongo:27017/developer_tools_portal
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:28080}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://developer-tools-portal.com,https://www.developer-tools-portal.com,http://localhost:28080}
       SEED_ON_START: ${SEED_ON_START:-true}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
@@ -37,7 +37,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:29030/api}
+        VITE_API_URL: ${VITE_API_URL:-/api}
         VITE_APP_ENV: ${VITE_APP_ENV:-}
     restart: unless-stopped
     ports:

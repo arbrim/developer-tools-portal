@@ -26,7 +26,7 @@ jobs:
       BACKEND_BIND: ${{ vars.BACKEND_BIND || '127.0.0.1' }}
       BACKEND_PORT: ${{ vars.BACKEND_PORT || '19031' }}
       CORS_ORIGIN: ${{ vars.CORS_ORIGIN || 'https://test.developer-tools-portal.com' }}
-      VITE_API_URL: ${{ vars.VITE_API_URL || 'https://test.developer-tools-portal.com/api' }}
+      VITE_API_URL: ${{ vars.VITE_API_URL || '/api' }}
       VITE_APP_ENV: ${{ vars.VITE_APP_ENV || 'test' }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRES_IN: ${{ vars.JWT_EXPIRES_IN || '1h' }}
@@ -121,8 +121,8 @@ jobs:
           set -euo pipefail
           cd "$APP_PATH"
           node scripts/use-env.mjs test
-          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test up -d --build --remove-orphans
-          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test ps
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env up -d --build --remove-orphans
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env ps
           EOF
 
       - name: Dump server logs on deploy failure
@@ -133,9 +133,9 @@ jobs:
           ssh -p "$HETZNER_PORT" "$HETZNER_USER@$HETZNER_HOST" <<EOF
           set -euo pipefail
           cd "$APP_PATH"
-          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test ps || true
-          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test logs --no-color backend || true
-          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test logs --no-color frontend || true
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env ps || true
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env logs --no-color backend || true
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env logs --no-color frontend || true
           EOF
 
       - name: Health check

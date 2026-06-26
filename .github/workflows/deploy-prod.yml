@@ -26,7 +26,7 @@ jobs:
       BACKEND_BIND: ${{ vars.BACKEND_BIND || '127.0.0.1' }}
       BACKEND_PORT: ${{ vars.BACKEND_PORT || '29030' }}
       CORS_ORIGIN: ${{ vars.CORS_ORIGIN || 'https://developer-tools-portal.com,https://www.developer-tools-portal.com' }}
-      VITE_API_URL: ${{ vars.VITE_API_URL || 'https://developer-tools-portal.com/api' }}
+      VITE_API_URL: ${{ vars.VITE_API_URL || '/api' }}
       VITE_APP_ENV: ${{ vars.VITE_APP_ENV || '' }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRES_IN: ${{ vars.JWT_EXPIRES_IN || '1h' }}
@@ -121,8 +121,8 @@ jobs:
           set -euo pipefail
           cd "$APP_PATH"
           node scripts/use-env.mjs prod
-          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
-          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env.prod ps
+          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env up -d --build --remove-orphans
+          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env ps
           EOF
 
       - name: Dump server logs on deploy failure
@@ -133,9 +133,9 @@ jobs:
           ssh -p "$HETZNER_PORT" "$HETZNER_USER@$HETZNER_HOST" <<EOF
           set -euo pipefail
           cd "$APP_PATH"
-          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env.prod ps || true
-          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env.prod logs --no-color backend || true
-          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env.prod logs --no-color frontend || true
+          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env ps || true
+          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env logs --no-color backend || true
+          docker compose -p developer-tools-portal-prod -f docker-compose.prod.yml --env-file .env logs --no-color frontend || true
           EOF
 
       - name: Health check

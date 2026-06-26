@@ -6,4 +6,10 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  preview: {
+    allowedHosts: ['developer-tools-portal.com', 'www.developer-tools-portal.com', 'test.developer-tools-portal.com', 'localhost', '127.0.0.1'],
+    proxy: {
+      '/api': 'http://backend:3000',
+    },
+  },
 });
