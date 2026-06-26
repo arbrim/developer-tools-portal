@@ -1,4 +1,4 @@
-import { AuthUser, LinkPayload, ToolLink } from './types';
+import { AuthUser, LinkPayload, ToolLink } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 
