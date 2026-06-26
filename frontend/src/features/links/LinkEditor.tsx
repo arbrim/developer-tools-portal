@@ -1,5 +1,5 @@
 import { FormEvent } from 'react';
-import { Check, Plus, Save, X } from 'lucide-react';
+import { Plus, Save, X } from 'lucide-react';
 import { iconOptions } from '../../lib/toolIcons';
 import { LinkPayload } from '../../types';
 

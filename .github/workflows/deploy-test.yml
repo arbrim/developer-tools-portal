@@ -1,0 +1,156 @@
+name: Deploy to Test
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: developer-tools-portal-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: test
+    env:
+      HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+      HETZNER_USER: ${{ secrets.HETZNER_USER }}
+      HETZNER_SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+      HETZNER_PORT: ${{ vars.HETZNER_PORT || '22' }}
+      APP_PATH: ${{ secrets.APP_PATH }}
+      APP_URL: ${{ vars.APP_URL || 'https://test.developer-tools-portal.com' }}
+      FRONTEND_BIND: ${{ vars.FRONTEND_BIND || '127.0.0.1' }}
+      FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '18081' }}
+      BACKEND_BIND: ${{ vars.BACKEND_BIND || '127.0.0.1' }}
+      BACKEND_PORT: ${{ vars.BACKEND_PORT || '19031' }}
+      CORS_ORIGIN: ${{ vars.CORS_ORIGIN || 'https://test.developer-tools-portal.com' }}
+      VITE_API_URL: ${{ vars.VITE_API_URL || 'https://test.developer-tools-portal.com/api' }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ vars.JWT_EXPIRES_IN || '1h' }}
+      SEED_ON_START: ${{ vars.SEED_ON_START || 'true' }}
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      USER_EMAIL: ${{ secrets.USER_EMAIL }}
+      USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate deployment settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${HETZNER_HOST:?HETZNER_HOST secret is required}"
+          : "${HETZNER_USER:?HETZNER_USER secret is required}"
+          : "${HETZNER_SSH_KEY:?HETZNER_SSH_KEY secret is required}"
+          : "${APP_PATH:?APP_PATH secret is required}"
+          : "${JWT_SECRET:?JWT_SECRET secret is required}"
+
+      - name: Prepare SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s' "$HETZNER_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$HETZNER_PORT" "$HETZNER_HOST" >> ~/.ssh/known_hosts
+
+      - name: Ensure deploy path exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "$HETZNER_PORT" "$HETZNER_USER@$HETZNER_HOST" "mkdir -p '$APP_PATH'"
+
+      - name: Prepare remote repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "$HETZNER_PORT" "$HETZNER_USER@$HETZNER_HOST" <<EOF
+          set -euo pipefail
+          cd "$APP_PATH"
+          if [ ! -d .git ]; then
+            if [ -n "\$(find . -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+              echo "APP_PATH is not empty and is not a git checkout: $APP_PATH"
+              exit 1
+            fi
+            git clone "https://github.com/${GITHUB_REPOSITORY}.git" .
+          fi
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
+          EOF
+
+      - name: Create test environment file
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > .env.test.deploy <<EOF
+          APP_ENV=test
+          FRONTEND_BIND=${FRONTEND_BIND}
+          FRONTEND_PORT=${FRONTEND_PORT}
+          BACKEND_BIND=${BACKEND_BIND}
+          BACKEND_PORT=${BACKEND_PORT}
+          JWT_SECRET=${JWT_SECRET}
+          JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+          CORS_ORIGIN=${CORS_ORIGIN}
+          VITE_API_URL=${VITE_API_URL}
+          SEED_ON_START=${SEED_ON_START}
+          ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+          ADMIN_PASSWORD=${ADMIN_PASSWORD:-Admin123!}
+          USER_EMAIL=${USER_EMAIL:-user@example.com}
+          USER_PASSWORD=${USER_PASSWORD:-User123!}
+          EOF
+
+      - name: Upload test environment file
+        shell: bash
+        run: |
+          set -euo pipefail
+          scp -P "$HETZNER_PORT" .env.test.deploy "$HETZNER_USER@$HETZNER_HOST:$APP_PATH/.env.test"
+          rm -f .env.test.deploy
+
+      - name: Deploy on server
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "$HETZNER_PORT" "$HETZNER_USER@$HETZNER_HOST" <<EOF
+          set -euo pipefail
+          cd "$APP_PATH"
+          node scripts/use-env.mjs test
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test up -d --build --remove-orphans
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test ps
+          EOF
+
+      - name: Dump server logs on deploy failure
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "$HETZNER_PORT" "$HETZNER_USER@$HETZNER_HOST" <<EOF
+          set -euo pipefail
+          cd "$APP_PATH"
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test ps || true
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test logs --no-color backend || true
+          docker compose -p developer-tools-portal-test -f docker-compose.test.yml --env-file .env.test logs --no-color frontend || true
+          EOF
+
+      - name: Health check
+        if: ${{ env.APP_URL != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error --location --max-time 15 "$APP_URL/api/health" >/dev/null; then
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 20 ]; then
+              echo "Health check failed for $APP_URL/api/health after $attempt attempts."
+              exit 1
+            fi
+
+            echo "Health check attempt $attempt failed; waiting for services to become ready..."
+            sleep 15
+          done

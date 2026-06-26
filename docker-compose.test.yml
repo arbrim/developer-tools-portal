@@ -27,7 +27,7 @@ services:
       USER_EMAIL: ${USER_EMAIL:-user@example.com}
       USER_PASSWORD: ${USER_PASSWORD:-User123!}
     ports:
-      - "${BACKEND_PORT:-19031}:3000"
+      - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-19031}:3000"
     depends_on:
       mongo:
         condition: service_healthy
@@ -40,7 +40,7 @@ services:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:19031/api}
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-18081}:4173"
+      - "${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-18081}:4173"
     depends_on:
       - backend
 
