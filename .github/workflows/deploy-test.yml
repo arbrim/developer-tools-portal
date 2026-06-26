@@ -27,6 +27,7 @@ jobs:
       BACKEND_PORT: ${{ vars.BACKEND_PORT || '19031' }}
       CORS_ORIGIN: ${{ vars.CORS_ORIGIN || 'https://test.developer-tools-portal.com' }}
       VITE_API_URL: ${{ vars.VITE_API_URL || 'https://test.developer-tools-portal.com/api' }}
+      VITE_APP_ENV: ${{ vars.VITE_APP_ENV || 'test' }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRES_IN: ${{ vars.JWT_EXPIRES_IN || '1h' }}
       SEED_ON_START: ${{ vars.SEED_ON_START || 'true' }}
@@ -97,6 +98,7 @@ jobs:
           JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
           CORS_ORIGIN=${CORS_ORIGIN}
           VITE_API_URL=${VITE_API_URL}
+          VITE_APP_ENV=${VITE_APP_ENV}
           SEED_ON_START=${SEED_ON_START}
           ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
           ADMIN_PASSWORD=${ADMIN_PASSWORD:-Admin123!}

@@ -205,12 +205,15 @@ The production workflow deploys `main` with `docker-compose.prod.yml`, creates `
 
 Both workflows can use the same VM checkout path, for example `APP_PATH=/home/deploy/apps/developer-tools-portal`. Test and production are separated by `.env.test`/`.env.prod`, different Docker Compose project names, different volumes, and different host ports.
 
-Required GitHub environment secrets for both `test` and `production`:
+Required GitHub repository secrets shared by both deploy workflows:
 
 - `HETZNER_HOST`
 - `HETZNER_USER`
 - `HETZNER_SSH_KEY`
 - `APP_PATH`
+
+Required GitHub environment secrets for both `test` and `production`:
+
 - `JWT_SECRET`
 
 Optional GitHub environment secrets:
@@ -230,6 +233,7 @@ Default test environment variables:
 - `BACKEND_PORT` defaults to `19031`
 - `CORS_ORIGIN` defaults to `https://test.developer-tools-portal.com`
 - `VITE_API_URL` defaults to `https://test.developer-tools-portal.com/api`
+- `VITE_APP_ENV` defaults to `test`
 - `JWT_EXPIRES_IN` defaults to `1h`
 - `SEED_ON_START` defaults to `true`
 
@@ -243,6 +247,7 @@ Default production environment variables:
 - `BACKEND_PORT` defaults to `29030`
 - `CORS_ORIGIN` defaults to `https://developer-tools-portal.com,https://www.developer-tools-portal.com`
 - `VITE_API_URL` defaults to `https://developer-tools-portal.com/api`
+- `VITE_APP_ENV` defaults to empty, so no environment badge is shown in production
 - `JWT_EXPIRES_IN` defaults to `1h`
 - `SEED_ON_START` defaults to `true`
 

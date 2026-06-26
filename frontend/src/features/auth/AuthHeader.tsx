@@ -2,6 +2,8 @@ import { FormEvent } from 'react';
 import { LogIn, LogOut } from 'lucide-react';
 import { AuthUser } from '../../types';
 
+const appEnvironment = (import.meta.env.VITE_APP_ENV ?? '').trim();
+
 interface LoginFormState {
   email: string;
   password: string;
@@ -20,7 +22,10 @@ export function AuthHeader({ loginForm, user, onLogin, onLoginFormChange, onLogo
     <section className="border-b border-zinc-200 bg-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Internal Platform</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Internal Platform</p>
+            {appEnvironment && <span className="env-badge">{appEnvironment}</span>}
+          </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-normal text-zinc-950">Developer Tools Portal</h1>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

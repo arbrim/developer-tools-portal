@@ -43,6 +43,7 @@ services:
       dockerfile: frontend/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api}
+        VITE_APP_ENV: ${VITE_APP_ENV:-dev}
     restart: unless-stopped
     ports:
       - "${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-5173}:4173"
